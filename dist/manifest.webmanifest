@@ -1,0 +1,22 @@
+{
+  "name": "S&R Consultoria e Gestão Tributária",
+  "short_name": "S&R Consultoria",
+  "description": "Consultoria tributária e Direito Penal Empresarial em Curitiba — PR. Defesa fiscal, transação de débitos, RenegociaPR e regularização perante a PGFN.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0B2047",
+  "categories": ["business", "finance", "law"],
+  "icons": [
+    {
+      "src": "/assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

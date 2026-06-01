@@ -1,0 +1,253 @@
+{
+  "name": "S&R — Diagnóstico Reforma Tributária",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "diagnostico-reforma-tributaria",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://srgestaotributaria.com,https://www.srgestaotributaria.com,http://127.0.0.1:8080"
+        }
+      },
+      "id": "1a000000-0000-0000-0000-000000000001",
+      "name": "Webhook (POST /diagnostico)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 320],
+      "webhookId": "diagnostico-reforma-tributaria"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// VALIDAÇÃO + SANITIZAÇÃO do payload do formulário\n// ============================================================\nconst body = $input.first().json.body || $input.first().json || {};\n\n// Honeypot — bots costumam preencher qualquer field\nif (body._site) {\n  return [{ json: { _honeypot: true, ok: true, message: 'Recebido.' } }];\n}\n\n// Helper de sanitização\nconst clean = (v, max = 200) => {\n  if (v == null) return '';\n  return String(v).trim().replace(/[\\r\\n\\t]+/g, ' ').slice(0, max);\n};\n\nconst lead = {\n  nome:          clean(body.nome, 120),\n  whatsapp:      clean(body.whatsapp, 30),\n  email:         clean(body.email, 120).toLowerCase(),\n  empresa:       clean(body.empresa, 120),\n  cidade:        clean(body.cidade, 80),\n  tempo:         clean(body.tempo, 60),\n  atividade:     clean(body.atividade, 120),\n  faturamento:   clean(body.faturamento, 60),\n  perfilCliente: clean(body.perfilCliente, 120),\n  duvida:        clean(body.duvida, 200),\n  prazo:         clean(body.prazo, 80),\n  lgpd:          !!body.lgpd,\n  origem:        clean(body._origem || 'Diagnóstico Reforma Tributária', 80),\n  timestamp:     new Date().toISOString(),\n  ip:            $input.first().json.headers?.['x-forwarded-for']?.split(',')[0]?.trim()\n                || $input.first().json.headers?.['x-real-ip']\n                || 'desconhecido',\n};\n\n// Validação\nconst errors = [];\nif (lead.nome.length < 3)                                errors.push('Nome inválido.');\nif (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(lead.email))     errors.push('E-mail inválido.');\nif (!lead.whatsapp)                                      errors.push('WhatsApp obrigatório.');\nif (!lead.cidade)                                        errors.push('Cidade obrigatória.');\nif (!lead.atividade)                                     errors.push('Atividade obrigatória.');\nif (!lead.faturamento)                                   errors.push('Faturamento obrigatório.');\nif (!lead.perfilCliente)                                 errors.push('Perfil de cliente obrigatório.');\nif (!lead.duvida)                                        errors.push('Dúvida obrigatória.');\nif (!lead.lgpd)                                          errors.push('Autorização LGPD obrigatória.');\n\nif (errors.length) {\n  return [{ json: { _invalid: true, ok: false, message: errors.join(' '), status: 422 } }];\n}\n\n// Normaliza WhatsApp para wa.me (só dígitos + prefixo 55)\nlet waDigits = lead.whatsapp.replace(/\\D/g, '');\nif (waDigits && !waDigits.startsWith('55')) waDigits = '55' + waDigits;\nlead.waDigits = waDigits;\nlead.waLink   = `https://wa.me/${waDigits}`;\n\n// Pronto para os próximos nodes\nreturn [{ json: lead }];"
+      },
+      "id": "2a000000-0000-0000-0000-000000000002",
+      "name": "Validar e Sanitizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "honeypot-or-invalid",
+              "leftValue": "={{ $json._honeypot || $json._invalid ? 'block' : 'pass' }}",
+              "rightValue": "block",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3a000000-0000-0000-0000-000000000003",
+      "name": "Bot ou inválido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 320]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: $json.ok ?? false, message: $json.message ?? 'Dados inválidos.' } }}",
+        "options": {
+          "responseCode": "={{ $json.status ?? 200 }}",
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "https://srgestaotributaria.com" },
+              { "name": "Content-Type", "value": "application/json; charset=utf-8" }
+            ]
+          }
+        }
+      },
+      "id": "4a000000-0000-0000-0000-000000000004",
+      "name": "Respond (bot/erro)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "sendTo": "srgestaotributaria@gmail.com",
+        "subject": "=🔔 Novo lead — Diagnóstico Reforma Tributária: {{ $json.nome }}",
+        "emailType": "html",
+        "message": "=<!DOCTYPE html>\n<html lang=\"pt-BR\"><head><meta charset=\"utf-8\"></head>\n<body style=\"margin:0;padding:24px;background:#F7F7F7;font-family:'Segoe UI',Arial,sans-serif;color:#252525\">\n  <div style=\"max-width:640px;margin:0 auto;background:#fff;border:1px solid #E5E5E5;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(11,32,71,.06)\">\n    <div style=\"background:linear-gradient(135deg,#0B2047 0%,#152848 100%);color:#fff;padding:28px 32px\">\n      <div style=\"font-family:Georgia,serif;font-size:13px;color:#DBBD85;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px\">Diagnóstico Reforma Tributária</div>\n      <h1 style=\"margin:0;font-family:Georgia,serif;font-size:22px;font-weight:400;line-height:1.25\">Novo lead recebido</h1>\n      <p style=\"margin:8px 0 0;color:rgba(255,255,255,.75);font-size:13px\">Resposta esperada em até 1 dia útil &middot; LGPD autorizado</p>\n    </div>\n    <table style=\"width:100%;border-collapse:collapse;font-size:14px\">\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047;width:32%\">Nome</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.nome }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">WhatsApp</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\"><a href=\"{{ $json.waLink }}\" style=\"color:#25D366;font-weight:600;text-decoration:none\">{{ $json.whatsapp }}</a> &nbsp;·&nbsp; <a href=\"{{ $json.waLink }}\" style=\"color:#0B2047;font-size:12px\">Responder no WhatsApp →</a></td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">E-mail</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\"><a href=\"mailto:{{ $json.email }}\" style=\"color:#0B2047\">{{ $json.email }}</a></td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Empresa</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.empresa || '—' }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Cidade / UF</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.cidade }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Tempo de empresa</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.tempo || '—' }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Atividade</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.atividade }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Faturamento</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.faturamento }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Perfil de cliente</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.perfilCliente }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Maior dúvida</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.duvida }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Prazo</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.prazo || '—' }}</td></tr>\n      <tr><td style=\"padding:10px 14px;background:#FAF9F5;border-bottom:1px solid #E5E5E5;font-weight:600;color:#0B2047\">Recebido em</td><td style=\"padding:10px 14px;background:#fff;border-bottom:1px solid #E5E5E5\">{{ $json.timestamp }}</td></tr>\n    </table>\n    <div style=\"padding:20px 32px;background:#FAF9F5;border-top:1px solid #E5E5E5;text-align:center\">\n      <a href=\"{{ $json.waLink }}\" style=\"display:inline-block;background:#25D366;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px\">Responder no WhatsApp</a> &nbsp;\n      <a href=\"mailto:{{ $json.email }}\" style=\"display:inline-block;background:#0B2047;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px\">Responder por e-mail</a>\n    </div>\n    <div style=\"padding:16px 32px;text-align:center;font-size:11px;color:#8a8a8a\">Notificação automática &middot; via n8n</div>\n  </div>\n</body></html>",
+        "options": {
+          "replyTo": "={{ $json.nome }} <{{ $json.email }}>"
+        }
+      },
+      "id": "5a000000-0000-0000-0000-000000000005",
+      "name": "Gmail — Enviar E-mail Admin",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [900, 380],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_GMAIL_CRED_ID",
+          "name": "Gmail — srgestaotributaria"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Validar e Sanitizar').item.json.timestamp }}",
+            "Nome": "={{ $('Validar e Sanitizar').item.json.nome }}",
+            "WhatsApp": "={{ $('Validar e Sanitizar').item.json.whatsapp }}",
+            "E-mail": "={{ $('Validar e Sanitizar').item.json.email }}",
+            "Empresa": "={{ $('Validar e Sanitizar').item.json.empresa }}",
+            "Cidade/UF": "={{ $('Validar e Sanitizar').item.json.cidade }}",
+            "Tempo empresa": "={{ $('Validar e Sanitizar').item.json.tempo }}",
+            "Atividade": "={{ $('Validar e Sanitizar').item.json.atividade }}",
+            "Faturamento": "={{ $('Validar e Sanitizar').item.json.faturamento }}",
+            "Perfil cliente": "={{ $('Validar e Sanitizar').item.json.perfilCliente }}",
+            "Dúvida": "={{ $('Validar e Sanitizar').item.json.duvida }}",
+            "Prazo": "={{ $('Validar e Sanitizar').item.json.prazo }}",
+            "LGPD": "={{ $('Validar e Sanitizar').item.json.lgpd }}",
+            "Origem": "={{ $('Validar e Sanitizar').item.json.origem }}",
+            "IP": "={{ $('Validar e Sanitizar').item.json.ip }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "Timestamp", "displayName": "Timestamp", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Nome", "displayName": "Nome", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "WhatsApp", "displayName": "WhatsApp", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "E-mail", "displayName": "E-mail", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Empresa", "displayName": "Empresa", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Cidade/UF", "displayName": "Cidade/UF", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Tempo empresa", "displayName": "Tempo empresa", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Atividade", "displayName": "Atividade", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Faturamento", "displayName": "Faturamento", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Perfil cliente", "displayName": "Perfil cliente", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Dúvida", "displayName": "Dúvida", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Prazo", "displayName": "Prazo", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "LGPD", "displayName": "LGPD", "required": false, "defaultMatch": false, "display": true, "type": "boolean", "canBeUsedToMatch": true },
+            { "id": "Origem", "displayName": "Origem", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "IP", "displayName": "IP", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6a000000-0000-0000-0000-000000000006",
+      "name": "Sheets — Registrar Lead",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1120, 380],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_SHEETS_CRED_ID",
+          "name": "Google Sheets — S&R"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/REPLACE_PHONE_NUMBER_ID/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"554184114279\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"novo_lead_diagnostico\",\n    \"language\": { \"code\": \"pt_BR\" },\n    \"components\": [\n      {\n        \"type\": \"body\",\n        \"parameters\": [\n          { \"type\": \"text\", \"text\": \"{{ $('Validar e Sanitizar').item.json.nome }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Validar e Sanitizar').item.json.whatsapp }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Validar e Sanitizar').item.json.email }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Validar e Sanitizar').item.json.atividade }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Validar e Sanitizar').item.json.faturamento }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Validar e Sanitizar').item.json.perfilCliente }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Validar e Sanitizar').item.json.duvida }}\" },\n          { \"type\": \"text\", \"text\": \"{{ $('Validar e Sanitizar').item.json.waDigits }}\" }\n        ]\n      }\n    ]\n  }\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "7a000000-0000-0000-0000-000000000007",
+      "name": "WhatsApp Cloud API — Notificar Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 380],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_META_TOKEN_CRED_ID",
+          "name": "Meta Cloud API — Bearer Token"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "continueOnFail = true: se WhatsApp falhar, e-mail e Sheets já garantiram o lead. Não trava o fluxo."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  ok: true,\n  message: 'Recebemos suas informações. Em até 1 dia útil, entraremos em contato.',\n  wa_client_url: 'https://wa.me/554184114279?text=' + encodeURIComponent('Olá Edilton, acabei de preencher o Diagnóstico Reforma Tributária. Meu nome é ' + $('Validar e Sanitizar').item.json.nome + '.')\n} }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "https://srgestaotributaria.com" },
+              { "name": "Content-Type", "value": "application/json; charset=utf-8" }
+            ]
+          }
+        }
+      },
+      "id": "8a000000-0000-0000-0000-000000000008",
+      "name": "Respond — Sucesso ao site",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1560, 380]
+    }
+  ],
+  "connections": {
+    "Webhook (POST /diagnostico)": {
+      "main": [[{ "node": "Validar e Sanitizar", "type": "main", "index": 0 }]]
+    },
+    "Validar e Sanitizar": {
+      "main": [[{ "node": "Bot ou inválido?", "type": "main", "index": 0 }]]
+    },
+    "Bot ou inválido?": {
+      "main": [
+        [{ "node": "Respond (bot/erro)", "type": "main", "index": 0 }],
+        [{ "node": "Gmail — Enviar E-mail Admin", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gmail — Enviar E-mail Admin": {
+      "main": [[{ "node": "Sheets — Registrar Lead", "type": "main", "index": 0 }]]
+    },
+    "Sheets — Registrar Lead": {
+      "main": [[{ "node": "WhatsApp Cloud API — Notificar Admin", "type": "main", "index": 0 }]]
+    },
+    "WhatsApp Cloud API — Notificar Admin": {
+      "main": [[{ "node": "Respond — Sucesso ao site", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "active": false,
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "S&R Consultoria — captura de leads do formulário Diagnóstico Reforma Tributária. Recebe webhook do site, valida, envia e-mail via Gmail OAuth, registra em Google Sheets, notifica admin via WhatsApp Cloud API (template aprovado) e responde ao site com wa.me do admin para o cliente."
+  },
+  "tags": [
+    { "name": "S&R Consultoria" },
+    { "name": "Captura de leads" }
+  ]
+}

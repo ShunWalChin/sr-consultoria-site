@@ -1,0 +1,128 @@
+════════════════════════════════════════════════════════════
+S&R CONSULTORIA — DEPLOY PARA HOSTGATOR
+════════════════════════════════════════════════════════════
+
+Esta pasta é o conteúdo que vai integralmente para `public_html/`
+do seu plano HostGator. Sobe, libera HTTPS, está no ar.
+
+════════════════════════════════════════════════════════════
+PASSO A PASSO (20 minutos)
+════════════════════════════════════════════════════════════
+
+1. UPLOAD
+   ─────────
+   a) Acesse o cPanel → File Manager → public_html/
+   b) Selecione TODOS os arquivos atuais em public_html/ e DELETE
+      (faça backup antes se houver algo importante)
+   c) Faça upload do arquivo `sr-consultoria-deploy.zip`
+   d) Selecione o ZIP → botão "Extract" → confirme em public_html/
+   e) Delete o ZIP após extração
+
+   Alternativa via FTP: arraste TODO o conteúdo desta pasta `dist/`
+   (sem a pasta `dist/` em si — só o conteúdo dela) para `/public_html/`.
+
+2. PERMISSÕES
+   ──────────
+   No File Manager, marque todos os arquivos → "Permissions":
+   - Arquivos:  644
+   - Pastas:    755
+
+3. HTTPS / SSL
+   ───────────
+   cPanel → SSL/TLS → "Let's Encrypt SSL" → Issue para:
+   - srgestaotributaria.com
+   - www.srgestaotributaria.com
+
+   O .htaccess já força redirect HTTP → HTTPS automaticamente.
+
+4. VERIFICAÇÃO
+   ───────────
+   Abra no navegador:
+   - https://srgestaotributaria.com/                        (deve carregar a home)
+   - https://www.srgestaotributaria.com/                    (deve redirecionar p/ sem-www)
+   - http://srgestaotributaria.com/                         (deve redirecionar p/ HTTPS)
+   - https://srgestaotributaria.com/pagina-inexistente      (deve mostrar 404.html)
+   - https://srgestaotributaria.com/robots.txt              (deve exibir o texto)
+   - https://srgestaotributaria.com/sitemap.xml             (deve exibir o XML)
+
+5. FOTOS DA EQUIPE (PENDENTE)
+   ───────────────────────────
+   Suba via File Manager para `public_html/assets/img/`:
+   - edilton.jpg    (600x750 px, ~120 KB recomendado)
+   - emilly.jpg     (600x750 px, ~120 KB recomendado)
+
+   Sem essas fotos, a seção "Sobre nós" mostra ícones quebrados.
+
+6. FORMULÁRIO DE DIAGNÓSTICO (n8n)
+   ───────────────────────────────
+   No arquivo `diagnostico-reforma-tributaria.html`, busque:
+       const ENDPOINT = "";
+   Troque por:
+       const ENDPOINT = "https://n8n.SEUDOMINIO.com/webhook/diagnostico-reforma-tributaria";
+
+   Veja a pasta `n8n/` no projeto original para o workflow e setup.
+   Antes disso, o formulário registra os dados no console (modo demo).
+
+7. CONFIGURAÇÕES PÓS-DEPLOY
+   ─────────────────────────
+   - Google Search Console: cadastre o domínio e submeta sitemap.xml
+   - Google Business Profile: cadastre o escritório (Curitiba/PR)
+   - Cloudflare (opcional): CDN gratuito + camada adicional de proteção
+
+════════════════════════════════════════════════════════════
+ESTRUTURA DESTE BUILD
+════════════════════════════════════════════════════════════
+
+dist/
+├── .htaccess              ← Apache: HTTPS, gzip, cache, headers, 404
+├── index.html             ← Home
+├── 404.html               ← Página de erro amigável
+├── servicos.html          ← Catálogo de áreas
+├── servico-*.html         ← 7 LPs de serviço
+├── diagnostico-reforma-tributaria.html  ← Formulário com n8n
+├── programa-de-parceria.html
+├── contato.html
+├── politica-de-privacidade.html
+├── termos-de-uso.html
+├── robots.txt             ← Diretivas de crawl + sitemap
+├── sitemap.xml            ← 14 URLs indexáveis
+├── manifest.webmanifest   ← PWA install
+├── favicon.svg            ← Ícone navegador / abas
+├── css/
+│   └── style.css          ← Folha única (~30 KB)
+├── js/
+│   └── main.js            ← Vanilla (~6 KB)
+└── assets/
+    ├── logo.svg
+    └── img/
+        ├── edilton.jpg    ← VOCÊ SOBE
+        └── emilly.jpg     ← VOCÊ SOBE
+
+════════════════════════════════════════════════════════════
+RECURSOS ATIVOS POR PADRÃO
+════════════════════════════════════════════════════════════
+
+✓ HTTPS forçado (redirect 301)
+✓ Sem www (redirect 301)
+✓ HSTS habilitado (max-age 1 ano)
+✓ Gzip + Brotli compressão
+✓ Cache 1 mês para CSS/JS, 1 ano para imagens
+✓ Cache zero para HTML (mudanças refletem na hora)
+✓ X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+✓ Content-Security-Policy permitindo Google Fonts, Unsplash, Instagram
+✓ Página 404 customizada com navegação
+✓ Manifest PWA (instalável como app no celular)
+✓ Schema.org LegalService em todas as LPs
+✓ Sitemap XML com 14 URLs
+✓ Acessibilidade WCAG AA (contraste, touch targets, ARIA)
+✓ Mobile-first responsivo
+✓ Assinatura "fattech.com.br" no rodapé de todas as páginas
+
+════════════════════════════════════════════════════════════
+SUPORTE
+════════════════════════════════════════════════════════════
+
+Documentação técnica completa: DOCUMENTACAO.md (no projeto)
+Workflow n8n: pasta n8n/ no projeto (não vai pro servidor)
+
+════════════════════════════════════════════════════════════

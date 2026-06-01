@@ -1,0 +1,69 @@
+S&R Consultoria — Website
+Copyright (c) 2026 S&R Consultoria e Gestão Tributária
+CNPJ 62.120.957/0001-29 — Curitiba, PR, Brasil
+Desenvolvido por FAT Tech (fattech.com.br)
+
+============================================================
+LICENÇA HÍBRIDA
+============================================================
+
+Este repositório contém DOIS tipos de obras com licenças distintas:
+
+------------------------------------------------------------
+1. CÓDIGO TÉCNICO (HTML, CSS, JavaScript, .htaccess, workflows
+   n8n e arquivos de configuração)
+------------------------------------------------------------
+
+Licenciado sob a MIT License:
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Code"), to deal in the Code without restriction,
+including without limitation the rights to use, copy, modify,
+merge, publish, distribute, sublicense, and/or sell copies of
+the Code, and to permit persons to whom the Code is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Code.
+
+THE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT.
+
+------------------------------------------------------------
+2. CONTEÚDO INSTITUCIONAL (textos, copywriting, identidade
+   visual, marcas, paleta de cores, imagens, fotografias,
+   logotipos e referências jurídicas)
+------------------------------------------------------------
+
+TODOS OS DIREITOS RESERVADOS.
+
+O conteúdo institucional é propriedade exclusiva da S&R
+Consultoria e Gestão Tributária e está protegido pela Lei de
+Direitos Autorais brasileira (Lei nº 9.610/1998).
+
+É VEDADA, sem autorização expressa e por escrito da S&R
+Consultoria, qualquer:
+
+  - Reprodução total ou parcial dos textos institucionais
+  - Uso comercial do nome "S&R Consultoria", logotipo ou
+    qualquer marca associada
+  - Cópia da identidade visual, paleta de cores ou tipografia
+    para finalidades concorrentes
+  - Redistribuição das fotografias profissionais da equipe
+
+Para licenciamento ou parcerias, entre em contato:
+  contato@srgestaotributaria.com
+
+============================================================
+ATRIBUIÇÃO
+============================================================
+
+Este site foi desenvolvido por FAT Tech (https://fattech.com.br).
+A assinatura "Site desenvolvido por fattech.com.br" presente
+no rodapé deve ser preservada em forks ou implementações
+derivadas como cortesia profissional.
+
+============================================================

@@ -1,0 +1,66 @@
+============================================================
+TEMPLATE WhatsApp Cloud API — para aprovar no Meta Business
+============================================================
+
+Onde criar:
+  https://business.facebook.com/wa/manage/message-templates/
+
+Configuração do template:
+
+  Nome interno: novo_lead_diagnostico
+  Idioma:       Português (BR) — pt_BR
+  Categoria:    UTILITY  (notificação operacional, aprovação rápida)
+
+------------------------------------------------------------
+HEADER (sem)
+------------------------------------------------------------
+
+  (Deixe vazio. Sem header.)
+
+------------------------------------------------------------
+BODY (com 8 variáveis numeradas)
+------------------------------------------------------------
+
+🔔 *Novo lead — Reforma Tributária*
+
+👤 *{{1}}*
+📱 {{2}}
+✉️ {{3}}
+
+🏭 *Atividade:* {{4}}
+💰 *Faturamento:* {{5}}
+🤝 *Cliente:* {{6}}
+❓ *Dúvida:* {{7}}
+
+📩 Responder direto: https://wa.me/{{8}}
+
+------------------------------------------------------------
+FOOTER (opcional)
+------------------------------------------------------------
+
+  S&R Consultoria · Notificação automática
+
+------------------------------------------------------------
+EXEMPLOS para preencher na hora da submissão (Meta exige):
+------------------------------------------------------------
+
+  {{1}}  →  Ana Carolina Souza
+  {{2}}  →  (11) 99999-9999
+  {{3}}  →  ana.souza@empresa.com.br
+  {{4}}  →  Indústria — fabrica produtos
+  {{5}}  →  R$ 360 mil a R$ 720 mil
+  {{6}}  →  Vendo principalmente para outras empresas
+  {{7}}  →  Tenho medo de perder clientes empresa por não dar crédito
+  {{8}}  →  5511999999999
+
+------------------------------------------------------------
+NOTAS
+------------------------------------------------------------
+
+1. Aprovação geralmente leva entre 1 minuto e 24 horas.
+2. Se a Meta rejeitar, ajuste o texto (remova emojis de "promoção"
+   ou linguagem comercial). A categoria UTILITY tem mais chance.
+3. Após aprovado, o nome do template (`novo_lead_diagnostico`) já
+   está hard-coded no workflow.json — sem ajuste necessário.
+4. Se quiser MUDAR o template depois, edite:
+   workflow.json → node "WhatsApp Cloud API" → campo template.name

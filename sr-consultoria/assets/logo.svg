@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 88" role="img" aria-label="S&R Consultoria e Gestão Tributária">
+  <title>S&amp;R Consultoria e Gestão Tributária</title>
+  <g>
+    <!-- Mark -->
+    <rect x="4" y="20" width="48" height="48" rx="6" fill="#0B2047"/>
+    <rect x="11" y="27" width="34" height="34" rx="3" fill="none" stroke="#DBBD85" stroke-width="1"/>
+    <text x="28" y="52" text-anchor="middle" font-family="'Forum', 'Times New Roman', serif" font-size="22" fill="#ffffff" letter-spacing="0">S&amp;R</text>
+
+    <!-- Wordmark -->
+    <text x="62" y="46" font-family="'Forum', 'Times New Roman', serif" font-size="20" fill="#0B2047" letter-spacing="0.5">S&amp;R</text>
+    <text x="62" y="62" font-family="'DM Sans', Arial, sans-serif" font-size="9" fill="#6B6B6B" letter-spacing="1.5">CONSULTORIA TRIBUTÁRIA</text>
+  </g>
+</svg>

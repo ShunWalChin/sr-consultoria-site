@@ -1,0 +1,10 @@
+# robots.txt — S&R Consultoria e Gestão Tributária
+# Indexação institucional ampla. Privacidade e Termos permanecem indexáveis
+# para reforçar a presença SEO da marca em buscas de compliance/LGPD.
+
+User-agent: *
+Allow: /
+
+# Áreas potencialmente sensíveis a bots agressivos podem ser bloqueadas aqui no futuro.
+
+Sitemap: https://srgestaotributaria.com/sitemap.xml
